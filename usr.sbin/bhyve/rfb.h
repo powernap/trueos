@@ -33,7 +33,8 @@
 
 #define	RFB_PORT	5900
 
-int	rfb_init(char *hostname, int port, int wait, char *password);
+int	rfb_init(char *hostname, int port, int wait, char *password,
+	    char *keymap);
 int	vncserver_init(char *hostname, int port, int wait, char *password);
 
 #endif /* _RFB_H_ */

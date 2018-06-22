@@ -61,7 +61,7 @@ __FBSDID("$FreeBSD$");
  * BAR0 points to the current mode information.
  * BAR1 is the 32-bit framebuffer address.
  *
- *  -s <b>,fbuf,wait,vga=on|io|off,rfb=<ip>:port,w=width,h=height
+ *  -s <b>,fbuf,wait,vga=on|io|off,rfb=<ip>:port,w=width,h=height,keymap=<map>
  */
 
 static int fbuf_debug = 1;
@@ -105,6 +105,7 @@ struct pci_fbuf_softc {
 	int		vga_enabled;
 	int		vga_full;
 	int		vncserver_enabled;
+	char		*rfb_keymap;
 
 	uint32_t	fbaddr;
 	char		*fb_base;
@@ -316,6 +317,14 @@ pci_fbuf_parse_opts(struct pci_fbuf_softc *sc, char *opts)
 				sc->memregs.height = 1080;
 		} else if (!strcmp(xopts, "password")) {
 			sc->rfb_password = config;
+		} else if (!strcmp(xopts, "keymap")) {
+			if (config && strlen(config) == 0) {
+				pci_fbuf_usage(xopts);
+				ret = -1;
+				goto done;
+			} else {
+				sc->rfb_keymap = config;
+			}
 		} else {
 			pci_fbuf_usage(xopts);
 			ret = -1;
@@ -440,7 +449,7 @@ pci_fbuf_init(struct vmctx *ctx, struct pci_devinst *pi, char *opts)
 	if (sc->vncserver_enabled)
 		error = vncserver_init(sc->rfb_host, sc->rfb_port, sc->rfb_wait, sc->rfb_password);
 	else
-		error = rfb_init(sc->rfb_host, sc->rfb_port, sc->rfb_wait, sc->rfb_password);
+		error = rfb_init(sc->rfb_host, sc->rfb_port, sc->rfb_wait, sc->rfb_password, sc->rfb_keymap);
 done:
 	if (error)
 		free(sc);

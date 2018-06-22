@@ -89,6 +89,7 @@ struct rfb_softc {
 	int		width, height;
 
 	char		*password;
+	char		*keymap;
 
 	bool	enc_raw_ok;
 	bool	enc_zlib_ok;
@@ -653,7 +654,7 @@ rfb_recv_key_msg(struct rfb_softc *rc, int cfd)
 
 	(void)stream_read(cfd, ((void *)&key_msg) + 1, sizeof(key_msg) - 1);
 
-	console_key_event(key_msg.down, htonl(key_msg.code));
+	console_key_event(key_msg.down, htonl(key_msg.code), rc->keymap);
 }
 
 static void
@@ -958,7 +959,7 @@ sse42_supported(void)
 }
 
 int
-rfb_init(char *hostname, int port, int wait, char *password)
+rfb_init(char *hostname, int port, int wait, char *password, char *keymap)
 {
 	struct rfb_softc *rc;
 	struct sockaddr_in sin;
@@ -977,6 +978,8 @@ rfb_init(char *hostname, int port, int wait, char *password)
 	rc->crc_height = RFB_MAX_HEIGHT;
 
 	rc->password = password;
+
+	rc->keymap = keymap;
 
 	rc->sfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (rc->sfd < 0) {

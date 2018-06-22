@@ -445,7 +445,7 @@ ps2kbd_keysym_queue(struct ps2kbd_softc *sc,
 }
 
 static void
-ps2kbd_event(int down, uint32_t keysym, void *arg)
+ps2kbd_event(int down, uint32_t keysym, char *keymap, void *arg)
 {
 	struct ps2kbd_softc *sc = arg;
 	int fifo_full;
