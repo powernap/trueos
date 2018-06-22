@@ -28,7 +28,7 @@
  */
 
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD$");
+__FBSDID("$FreeBSD: head/usr.sbin/bhyve/ps2kbd.c 335025 2018-06-13 03:22:08Z araujo $");
 
 #include <sys/types.h>
 
@@ -57,6 +57,51 @@ __FBSDID("$FreeBSD$");
 #define	PS2KC_ACK		0xfa
 
 #define	PS2KBD_FIFOSZ		16
+
+/* Keyboard device key functions */
+#define	PS2KBD_BACKSPACE	0xff08	/* Back space, back char */
+#define	PS2KBD_TAB		0xff09	/* Tab */
+#define	PS2KBD_RETURN		0xff0d	/* Return, enter */
+#define	PS2KBD_ESCAPE		0xff1b	/* Esc */
+#define	PS2KBD_DELETE		0xffff	/* Delete */
+
+/* Keyboard device key control and motion */
+#define	PS2KBD_HOME		0xff50	/* Home */
+#define	PS2KBD_LEFT		0xff51	/* Move left, left arrow */
+#define	PS2KBD_UP		0xff52	/* Move up, up arrow */
+#define	PS2KBD_RIGHT		0xff53	/* Move right, right arrow */
+#define	PS2KBD_DOWN		0xff54	/* Move down, down arrow */
+#define	PS2KBD_PGUP		0xff55	/* Page up */
+#define	PS2KBD_PGDOWN		0xff56	/* Page down */
+#define	PS2KBD_END		0xff57	/* EOL */
+#define	PS2KBD_INSERT		0xff63	/* Insert */
+
+/* Modifiers */
+#define	PS2KBD_SHIFT_L		0xffe1	/* Left shift */
+#define	PS2KBD_SHIFT_R		0xffe2	/* Right shift */
+#define	PS2KBD_CONTROL_L	0xffe3	/* Left control */
+#define	PS2KBD_CONTROL_R	0xffe4	/* Right control */
+#define	PS2KBD_CAPS_LOCK	0xffe5	/* Caps lock */
+#define	PS2KBD_ALT_L		0xffe9	/* Left Alt */
+#define	PS2KBD_ALT_R		0xffea	/* Right Alt */
+#define	PS2KBD_ALTGR		0xfe03	/* AltGr */
+#define	PS2KBD_WINDOWS_L	0xffeb	/* Left Windows */
+#define	PS2KBD_WINDOWS_R	0xffec	/* Right Windows */
+
+/* Auxiliary functions */
+#define	PS2KBD_F1		0xffbe
+#define	PS2KBD_F2		0xffbf
+#define	PS2KBD_F3		0xffc0
+#define	PS2KBD_F4		0xffc1
+#define	PS2KBD_F5		0xffc2
+#define	PS2KBD_F6		0xffc3
+#define	PS2KBD_F7		0xffc4
+#define	PS2KBD_F8		0xffc5
+#define	PS2KBD_F9		0xffc6
+#define	PS2KBD_F10		0xffc7
+#define	PS2KBD_F11		0xffc8
+#define	PS2KBD_F12		0xffc9
+
 
 struct fifo {
 	uint8_t	buf[PS2KBD_FIFOSZ];
@@ -240,75 +285,75 @@ ps2kbd_keysym_queue(struct ps2kbd_softc *sc,
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, translation[keysym]);
 		break;
-	case 0xff08:	/* Back space */
+	case PS2KBD_BACKSPACE:
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x66);
 		break;
-	case 0xff09:	/* Tab */
+	case PS2KBD_TAB:
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x0d);
 		break;
-	case 0xff0d:	/* Return  */
+	case PS2KBD_RETURN:
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x5a);
 		break;
-	case 0xff1b:	/* Escape */
+	case PS2KBD_ESCAPE:
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x76);
 		break;
-	case 0xff50:	/* Home */
+	case PS2KBD_HOME:
 		fifo_put(sc, 0xe0);
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x6c);
 		break;
-	case 0xff51:	/* Left arrow */
+	case PS2KBD_LEFT:
 		fifo_put(sc, 0xe0);
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x6b);
 		break;
-	case 0xff52:	/* Up arrow */
+	case PS2KBD_UP:
 		fifo_put(sc, 0xe0);
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x75);
 		break;
-	case 0xff53:	/* Right arrow */
+	case PS2KBD_RIGHT:
 		fifo_put(sc, 0xe0);
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x74);
 		break;
-	case 0xff54:	/* Down arrow */
+	case PS2KBD_DOWN:
 		fifo_put(sc, 0xe0);
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x72);
 		break;
-	case 0xff55:	/* PgUp */
+	case PS2KBD_PGUP:
 		fifo_put(sc, 0xe0);
 		if (!down)
 			fifo_put(sc, 0xf0);	
 		fifo_put(sc, 0x7d);
 		break;
-	case 0xff56:	/* PgDwn */
+	case PS2KBD_PGDOWN:
 		fifo_put(sc, 0xe0);
 		if (!down)
 			fifo_put(sc, 0xf0);	
 		fifo_put(sc, 0x7a);
 		break;
-	case 0xff57:	/* End */
+	case PS2KBD_END:
 		fifo_put(sc, 0xe0);
 		if (!down)
 			fifo_put(sc, 0xf0);	
 		fifo_put(sc, 0x69);
 		break;
-	case 0xff63:	/* Ins */
+	case PS2KBD_INSERT:
 		fifo_put(sc, 0xe0);
 		if (!down)
 			fifo_put(sc, 0xf0);	
@@ -320,22 +365,22 @@ ps2kbd_keysym_queue(struct ps2kbd_softc *sc,
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x5a);
 		break;
-	case 0xffe1:	/* Left shift */
+	case PS2KBD_SHIFT_L:
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x12);
 		break;
-	case 0xffe2:	/* Right shift */
+	case PS2KBD_SHIFT_R:
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x59);
 		break;
-	case 0xffe3:	/* Left control */
+	case PS2KBD_CONTROL_L:
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x14);
 		break;
-	case 0xffe4:	/* Right control */
+	case PS2KBD_CONTROL_R:
 		fifo_put(sc, 0xe0);
 		if (!down)
 			fifo_put(sc, 0xf0);
@@ -347,91 +392,91 @@ ps2kbd_keysym_queue(struct ps2kbd_softc *sc,
 	case 0xffe8:	/* Right meta */
 		/* XXX */
 		break;
-	case 0xffe9:	/* Left alt */
+	case PS2KBD_ALT_L:
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x11);
 		break;
-	case 0xfe03:	/* AltGr */
-	case 0xffea:	/* Right alt */
+	case PS2KBD_ALTGR:
+	case PS2KBD_ALT_R:
 		fifo_put(sc, 0xe0);
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x11);
 		break;
-	case 0xffeb:	/* Left Windows */
+	case PS2KBD_WINDOWS_L:
 		fifo_put(sc, 0xe0);
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x1f);
 		break;
-	case 0xffec:	/* Right Windows */
+	case PS2KBD_WINDOWS_R:
 		fifo_put(sc, 0xe0);
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x27);
 		break;
-	case 0xffbe:    /* F1 */
+	case PS2KBD_F1:
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x05);
 		break;
-	case 0xffbf:    /* F2 */
+	case PS2KBD_F2:
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x06);
 		break;
-	case 0xffc0:    /* F3 */
+	case PS2KBD_F3:
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x04);
 		break;
-	case 0xffc1:    /* F4 */
+	case PS2KBD_F4:
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x0C);
 		break;
-	case 0xffc2:    /* F5 */
+	case PS2KBD_F5:
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x03);
 		break;
-	case 0xffc3:    /* F6 */
+	case PS2KBD_F6:
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x0B);
 		break;
-	case 0xffc4:    /* F7 */
+	case PS2KBD_F7:
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x83);
 		break;
-	case 0xffc5:    /* F8 */
+	case PS2KBD_F8:
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x0A);
 		break;
-	case 0xffc6:    /* F9 */
+	case PS2KBD_F9:
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x01);
 		break;
-	case 0xffc7:    /* F10 */
+	case PS2KBD_F10:
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x09);
 		break;
-	case 0xffc8:    /* F11 */
+	case PS2KBD_F11:
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x78);
 		break;
-	case 0xffc9:    /* F12 */
+	case PS2KBD_F12:
 		if (!down)
 			fifo_put(sc, 0xf0);
 		fifo_put(sc, 0x07);
 		break;
-	case 0xffff:    /* Del */
+	case PS2KBD_DELETE:
 		fifo_put(sc, 0xe0);
 		if (!down)
 			fifo_put(sc, 0xf0);
